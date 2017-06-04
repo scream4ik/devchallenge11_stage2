@@ -1,0 +1,51 @@
+version: '2'
+services:
+  db:
+    restart: always
+    image: postgres:9.5.7
+    env_file:
+      - ./etc/docker/postgres.env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./.docker_data/postgresql:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5555:5432"
+  redis:
+    restart: always
+    image: redis:3.2.9
+    volumes:
+      - ./.docker_data/redis:/var/lib/redis
+  web:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./etc/docker/Dockerfile
+    command: python3 project/manage.py runserver 0.0.0.0:8000
+    env_file:
+      - ./etc/docker/postgres.env
+      - ./etc/docker/web.env
+    environment:
+      - DEBUG=True
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+  rq:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./etc/docker/Dockerfile
+    command: python3 project/manage.py rqworker default
+    env_file:
+      - ./etc/docker/postgres.env
+      - ./etc/docker/web.env
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - redis
+

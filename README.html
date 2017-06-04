@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        .fixed {
+            position: fixed;
+        }
+
+        /* sidebar */
+        .bs-docs-sidebar {
+            padding-left: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* all links */
+        .bs-docs-sidebar .nav>li>a {
+            color: #999;
+            border-left: 2px solid transparent;
+            padding: 4px 20px;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        /* nested links */
+        .bs-docs-sidebar .nav .nav>li>a {
+            padding-top: 1px;
+            padding-bottom: 1px;
+            padding-left: 30px;
+            font-size: 12px;
+        }
+
+        /* active & hover links */
+        .bs-docs-sidebar .nav>.active>a,
+        .bs-docs-sidebar .nav>li>a:hover,
+        .bs-docs-sidebar .nav>li>a:focus {
+            color: #563d7c;
+            text-decoration: none;
+            background-color: transparent;
+            border-left-color: #563d7c;
+        }
+        /* all active links */
+        .bs-docs-sidebar .nav>.active>a,
+        .bs-docs-sidebar .nav>.active:hover>a,
+        .bs-docs-sidebar .nav>.active:focus>a {
+            font-weight: 700;
+        }
+        /* nested active links */
+        .bs-docs-sidebar .nav .nav>.active>a,
+        .bs-docs-sidebar .nav .nav>.active:hover>a,
+        .bs-docs-sidebar .nav .nav>.active:focus>a {
+            font-weight: 500;
+        }
+
+        /* hide inactive nested list */
+        .bs-docs-sidebar .nav ul.nav {
+            display: none;
+        }
+        /* show active nested list */
+        .bs-docs-sidebar .nav>.active>ul.nav {
+            display: block;
+        }
+    </style>
+</head>
+<body data-spy="scroll" data-target=".bs-docs-sidebar" data-offset="40">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                <h2 id="info">Общая информация</h2>
+                <p>Проект предоставляет мониторинг новых событий календаря с сайта <a href="https://dou.ua/" target="_blank">https://dou.ua/</a>, а так же историю изменений ранее собранных событий.</p>
+                <p>При разработке проекта использовался паттерн MTV (Model-Template-View). Данный паттерн проектирования очень близок к классическому MVC, и самое главное, что он позволяет — это хорошо отделять бизнес-логику от дизайна.</p>
+
+                <h2 id="start">Как развернуть проект локально</h2>
+                <p>Данный проект запускается при помощи программного обеспечения Docker. Проект настроен в режиме отладки, текущие его настройки подойдут для локальной разработки, а так же для development сервера. Для production сервера необходимо немного расширить настройки проекта.</p>
+                <p>Для создания образа и поднятия контейнеров выполняем команду:</p>
+                <pre>docker-compose up -d --build<br>(Альтернативная команда: make up)</pre>
+                <p>Нам необходимо применить миграции к базе данных (PostgreSQL).</p>
+                <pre>docker-compose exec web python3 project/manage.py migrate<br>(Альтернативная команда: make syncdb)</pre>
+                <p>При желании у нас есть возможность подгрузить фикстуры для базы данных, в которых существует суперпользовать для доступа в административную часть проекта и заранее собранные данные:</p>
+                <pre>docker-compose exec web python3 project/manage.py loaddata etc/fixtures/*<br>(Альтернативная команда: make loaddata)</pre>
+                <p>Теперь у нас есть доступ в административную часть по адресу <a href="http://127.0.0.1:8000/admin/" target="_blank">127.0.0.1:8000/admin/</a>. Логин: admin. Пароль: adminadmin.</p>
+                <p>Ранее мы подняли контейнеры, но у нас ещё не были применены миграции к базе данных и соответственно в нашем приложении висела ошибка о нехватке таблиц в базе данных. Затем мы применили миграции, вследствии чего создали необходимые таблицы. Теперь нам необходимо перезапусить контейнеры:</p>
+                <pre>docker-compose up -d --build<br>(Альтернативная команда: make up)</pre>
+
+                <h2 id="parser">Парсер</h2>
+                <p>Для запуска обработки данных выполняем команду:</p>
+                <pre>docker-compose exec web python3 project/manage.py dou</pre>
+                <p>Так же доступен офлайн сбор данных с помощью планировщика задач, который базируется на python библиотеке RQ (Redis Queue).</p>
+                <p>Сбор данных для новых событий происходит каждые сутки в 22:00.</p>
+                <p>Проверка изменений в уже существующих событиях в базе данных происходит каждые 3 дня в 23:00.</p>
+                <p>Для разбора HTML данных используется библиотека lxml. Выбор пал именно на неё, так как одно из основных её преимуществ - скорость работы.</p>
+                <p>При проверки изменений в уже существующих событиях в базе данных, система проверяет или событие было удалено или же находится в архиве и делает соотвенную отметку в базе данных для этого инстанса. В дальнейшем такие события будут игнорироваться, так как больше нет смысла проверять их изменения.</p>
+
+                <h2 id="api">API</h2>
+                <p>API предоставляет удобный веб интерфейс, корень которого находится по адресу <a href="http://127.0.0.1:8000/api/v1/" target="_blank">127.0.0.1:8000/api/v1/</a>.</p>
+                <p>На данный момент API предоставляет доступ на чтение к таким данным, как: название события, краткое описание, полное описание, полное описание без html тегов, дату начала и окончания, время начала и окончания, место проведения, стоимость, ссылку, удалено ли событие или находится в архиве, а так же ссылки на версии изменений событий.</p>
+                <p>При подробном просмотре версии изменений (например <a href="http://127.0.0.1:8000/api/v1/version/1/" target="_blank">http://127.0.0.1:8000/api/v1/version/1/</a>) предоставляются данные в виде добавленных и удалённых строк, а так же изменённое описание с подсветкой для дальнейшей удобной манипуляцией данными. Пример отображения данных возможно наблюдать в административной части проекта (например <a href="http://127.0.0.1:8000/admin/core/event/1/history/compare/?version_id2=189&version_id1=1" target="_blank">http://127.0.0.1:8000/admin/core/event/1/history/compare/?version_id2=189&version_id1=1</a>)</p>
+                <p>При необходимости в работе API предусмотрены фильтры по удалённым событиям, а так же прошедшим.</p>
+                <p>События, которые были удалены с сайта-источника:</p>
+                <pre>http://127.0.0.1:8000/api/v1/event/?is_archive=true</pre>
+                <p>События, которые прошли и соответственно попали в архив:</p>
+                <pre>http://127.0.0.1:8000/api/v1/event/?is_deleted=true</pre>
+
+                <h2 id="tests">Тесты</h2>
+                <p>В проекте присутствуют unit тесты, которые на данный момент покрывают API, а так же класс, который отвечает за сбор данных с сайта. Для запуска тестов выполняем команду:</p>
+                <pre>docker-compose exec web python3 project/manage.py test project/<br>(Альтернативная команда: make test)</pre>
+            </div>
+
+            <div class="col-md-3">
+                <nav class="bs-docs-sidebar">
+                    <ul class="nav nav-stacked fixed">
+                        <li><a href="#info">Общая информация</a></li>
+                        <li><a href="#start">Развернуть проект</a></li>
+                        <li><a href="#parser">Парсер</a></li>
+                        <li><a href="#api">API</a></li>
+                        <li><a href="#tests">Тесты</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.js" defer></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" defer></script>
+</body>
+</html>
