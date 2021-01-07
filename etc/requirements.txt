@@ -11,7 +11,7 @@ django-rq==0.9.5
 django-rq-scheduler==1.1.1
 djangorestframework==3.6.3
 idna==2.5
-lxml==3.7.3
+lxml==4.6.2
 psycopg2==2.7.1
 python-dateutil==2.6.0
 pytz==2017.2
