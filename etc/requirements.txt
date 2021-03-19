@@ -9,7 +9,7 @@ django-reversion==2.0.8
 django-reversion-compare==0.7.5
 django-rq==0.9.5
 django-rq-scheduler==1.1.1
-djangorestframework==3.6.3
+djangorestframework==3.11.2
 idna==2.5
 lxml==3.7.3
 psycopg2==2.7.1
